@@ -7,14 +7,18 @@ const userSchema = new Schema({
     username: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    image: { type: String, required: true },
+    image: { type: String, required: false },
     bio: { type: String, required: true },
     role: { type: String, default: "user" }
 },{timestamps: true})
 
 userSchema.pre('save', async function (next) {
     if (this.isModified('password')) {
-        this.password = await bcrypt.hash(this.password, 10)
+        try {
+            this.password = await bcrypt.hash(this.password, 10)
+        } catch (error) {
+            return next(error)
+        }
     }
     next()
 })
