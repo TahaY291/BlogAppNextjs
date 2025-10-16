@@ -2,6 +2,7 @@ import { authOptions } from "@/lib/auth";
 import connectCloudinary from "@/lib/cloudinary";
 import { connectToDatabase } from "@/lib/db";
 import { updateUserSchema } from "@/lib/validations/userValidation";
+import Post from "@/models/post";
 import User from "@/models/user";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
@@ -63,23 +64,12 @@ export async function GET(request, { params }) {
         await connectToDatabase();
 
         const { id } = params;
-
-
         const session = await getServerSession(authOptions);
 
         if (!session || !session.user) {
             return NextResponse.json(
                 { message: "User is not logged in" },
                 { status: 401 }
-            );
-        }
-
-
-        const userRole = session.user.role;
-        if (userRole !== "admin") {
-            return NextResponse.json(
-                { message: "Forbidden: Admin access only" },
-                { status: 403 }
             );
         }
 
@@ -90,8 +80,7 @@ export async function GET(request, { params }) {
             );
         }
 
-        const user = await User.findById(id);
-
+        const user = await User.findById(id).select("username email image bio role createdAt");
         if (!user) {
             return NextResponse.json(
                 { message: "User not found" },
@@ -99,14 +88,87 @@ export async function GET(request, { params }) {
             );
         }
 
+        const { searchParams } = new URL(request.url);
+        const page = parseInt(searchParams.get("page")) || 1;
+        const limit = parseInt(searchParams.get("limit")) || 5;
+        const skip = (page - 1) * limit;
+
+        const authorId = new mongoose.Types.ObjectId(id);
+        const loggedInUserId = new mongoose.Types.ObjectId(session.user.id);
+
+        const posts = await Post.aggregate([
+            {
+                $match: { author: authorId },
+            },
+            {
+                $lookup: {
+                    from: "likes",
+                    localField: "_id",
+                    foreignField: "postId",
+                    as: "likes",
+                },
+            },
+            {
+                $lookup: {
+                    from: "comments",
+                    localField: "_id",
+                    foreignField: "postId",
+                    as: "comments",
+                },
+            },
+            {
+                $addFields: {
+                    likesCount: { $size: "$likes" },
+                    commentsCount: { $size: "$comments" },
+                    isLiked: {
+                        $in: [
+                            loggedInUserId,
+                            {
+                                $map: {
+                                    input: "$likes",
+                                    as: "like",
+                                    in: "$$like.userId",
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+            {
+                $project: {
+                    title: 1,
+                    content: 1,
+                    coverImg: 1,
+                    tags: 1,
+                    views: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    likesCount: 1,
+                    commentsCount: 1,
+                    isLiked: 1,
+                },
+            },
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+        ]);
+
+        const totalPosts = await Post.countDocuments({ author: authorId });
+
         return NextResponse.json(
             {
                 message: "User fetched successfully",
                 user,
+                posts,
+                pagination: {
+                    currentPage: page,
+                    totalPages: Math.ceil(totalPosts / limit),
+                    totalPosts,
+                    limit,
+                },
             },
             { status: 200 }
         );
-
     } catch (error) {
         console.error("Error fetching user:", error);
         return NextResponse.json(
@@ -118,6 +180,7 @@ export async function GET(request, { params }) {
         );
     }
 }
+
 
 export async function PUT(request, { params }) {
     try {

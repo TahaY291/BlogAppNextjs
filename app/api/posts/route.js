@@ -7,7 +7,7 @@ import User from "@/models/user";
 import { v2 as cloudinary } from "cloudinary";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-
+import mongoose from "mongoose";
 
 export async function POST(request) {
     try {
@@ -86,13 +86,89 @@ export async function POST(request) {
     }
 }
 
-export async function GET() {
+export async function GET(request) {        
     try {
         await connectToDatabase()
-        const posts = await Post.find({})
+        const session = await getServerSession(authOptions)
+        if (!session || !session.user) {
+            return NextResponse.json(
+                { message: "User not logged in" },
+                { status: 401 }
+            );
+        }
+
+        const { searchParams } = new URL(request.url)
+        const page = parseInt(searchParams.get("page")) || 1;
+        const limit = parseInt(searchParams.get("limit")) || 5;
+        const skip = (page - 1) * limit;
+
+        const posts = await Post.aggregate([ 
+            {
+                $match: {
+                    isPublished: true
+                }
+            },
+            {
+                $lookup: {
+                    from: "likes",
+                    localField: "_id",
+                    foreignField: "postId",
+                    as: "likes"
+                }
+            },
+            {
+                $lookup: {
+                    from: "comments",
+                    localField: "_id",
+                    foreignField: "postId",
+                    as: "comments",
+                },
+            },
+            {
+                $addFields: {
+                    likesCount: { $size: "$likes" },
+                    commentsCount: { $size: "$comments" },
+                    isLiked: {
+                        $in: [
+                            new mongoose.Types.ObjectId(session.user.id),
+                            {
+                                $map: {
+                                    input: "$likes",
+                                    as: "like",
+                                    in: "$$like.userId",
+                                },
+                            },
+                        ],
+                    },
+                }
+            },
+            {
+                $project: {
+                    title: 1,
+                    content: 1,
+                    coverImg: 1,
+                    tags: 1,
+                    views: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    likesCount: 1,
+                    commentsCount: 1,
+                    isLiked: 1,
+                },
+            },
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+        ])
+        const totalPosts = await Post.countDocuments({ isPublished: true });
+
         return NextResponse.json({
-            message: "All the posts are successfuly fetched", posts
-        }, { status: 200 })
+            success: true,
+            currentPage: page,
+            totalPages: Math.ceil(totalPosts / limit),
+            totalPosts,
+            posts,
+        });
     } catch (error) {
         console.error(error);
         return NextResponse.json(

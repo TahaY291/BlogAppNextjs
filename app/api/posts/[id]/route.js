@@ -1,3 +1,4 @@
+import mongoose from "mongoose"
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Post from "@/models/post";
@@ -49,24 +50,100 @@ export async function GET(request, { params }) {
         await connectToDatabase();
 
         const { id } = params;
-        const post = await Post.findById(id);
+        const session = await getServerSession(authOptions);
 
-        if (!post) {
+        if (!session || !session.user) {
             return NextResponse.json(
-                { error: "Post not found" },
-                { status: 404 }
+                { message: "User is not logged in" },
+                { status: 401 }
             );
         }
 
-        return NextResponse.json(
-            { message: "Post fetched successfully", post },
-            { status: 200 }
-        );
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return NextResponse.json(
+                { message: "Invalid blog ID" },
+                { status: 400 }
+            );
+        }
 
+        const blogId = new mongoose.Types.ObjectId(id);
+        const userId = new mongoose.Types.ObjectId(session.user.id);
+
+        const blogDetail = await Post.aggregate([
+            {
+                $match: { _id: blogId },
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "author",
+                    foreignField: "_id",
+                    as: "userDetails"
+                }
+            },
+            {
+                $unwind: "$userDetails"
+            },
+            {
+                $lookup: {
+                    from: "likes",
+                    localField: "_id",
+                    foreignField: "postId",
+                    as: "likes",
+                },
+            },
+            {
+                $lookup: {
+                    from: "comments",
+                    localField: "_id",
+                    foreignField: "postId",
+                    as: "comments"
+                }
+            },
+            {
+                $addFields: {
+                    likesCount: { $size: "$likes" },
+                    commentsCount: { $size: "$comments" },
+                    isLiked: {
+                        $in: [
+                            userId,
+                            {
+                                $map: {
+                                    input: "$likes",
+                                    as: "like",
+                                    in: "$$like.userId",
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+            {
+                $project: {
+                    title: 1,
+                    content: 1,
+                    coverImg: 1,
+                    tags: 1,
+                    views: 1,
+                    isPublished: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    likesCount: 1,
+                    commentsCount: 1,
+                    isLiked: 1,
+                    "userDetails._id": 1,
+                    "userDetails.username": 1,
+                    "userDetails.profilePic": 1
+                }
+            }
+
+        ]);
+
+        return NextResponse.json(blogDetail[0] || { message: "Blog not found" });
     } catch (error) {
-        console.error(error);
+        console.error("Error fetching blog:", error);
         return NextResponse.json(
-            { error: "Failed to fetch post", details: error.message }, 
+            { message: "Something went wrong", error: error.message },
             { status: 500 }
         );
     }
