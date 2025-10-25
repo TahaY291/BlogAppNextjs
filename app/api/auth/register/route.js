@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server'
 export async function POST(request) {
     try {
         await connectCloudinary()
+        await connectToDatabase()
 
         const formData = await request.formData()
         const image = await formData.get('image')
@@ -48,7 +49,6 @@ export async function POST(request) {
             );
         }
 
-        await connectToDatabase()
         const userAlreadyExist = await User.findOne({ email: userData.email })
         if (userAlreadyExist) {
             return NextResponse.json({ error: "User with this email already exists" }, { status: 401 })
