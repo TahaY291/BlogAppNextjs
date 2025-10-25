@@ -108,3 +108,37 @@ export async function DELETE(request, { params }) {
         );
     }
 }
+export async function GET(request, { params }) {
+    try {
+        await connectToDatabase();
+
+        const { id } = params; // this is postId
+        if (!id) {
+            return NextResponse.json({ message: "Post ID is required" }, { status: 400 });
+        }
+
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return NextResponse.json(
+                { message: "Unauthorized: Please log in first" },
+                { status: 401 }
+            );
+        }
+
+        // Fetch all comments of this post and populate the user info
+        const comments = await Comment.find({ postId: id })
+            .populate("userId", "username profilePic")
+            .sort({ createdAt: -1 }); // latest first
+
+        return NextResponse.json(
+            { message: "Comments fetched successfully", comments },
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error("Error fetching comments:", error);
+        return NextResponse.json(
+            { message: "Something went wrong", error: error.message },
+            { status: 500 }
+        );
+    }
+}
