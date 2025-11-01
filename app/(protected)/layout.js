@@ -6,6 +6,7 @@ import { Providers } from "../provider";
 import NavbarWrapper from "@/components/Navbar";
 import FooterWrapper from "@/components/Footer";
 import { redirect } from "next/navigation";
+import 'quill/dist/quill.snow.css'
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -29,8 +30,8 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col  `}>
-         <Providers session={session}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`} suppressHydrationWarning>
+         <Providers session={session}> 
           <NavbarWrapper />
           <main  className="flex-grow">{children}</main>
           <FooterWrapper />

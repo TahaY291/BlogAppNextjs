@@ -29,7 +29,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+    <div className="flex items-center justify-center h-screen">
       <div className="w-full max-w-md px-6">
         {/* Logo */}
         <div className="text-center mb-8">

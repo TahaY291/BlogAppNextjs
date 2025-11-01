@@ -12,9 +12,11 @@ const Navbar = () => {
                 <div className="flex items-center justify-between">
                     {/* Logo */}
                     <div>
+                        <Link href={'/'}>
                         <h1 className="text-2xl  font-serif text-black tracking-tight">
                             Dev<span className="text-[#153619]">Sphere</span>
                         </h1>
+                        </Link>
                     </div>
 
                     {/* Desktop Navigation */}

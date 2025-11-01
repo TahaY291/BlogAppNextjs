@@ -9,12 +9,21 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@tiptap/extension-code-block-lowlight": "^3.10.1",
+    "@tiptap/extension-color": "^3.10.1",
+    "@tiptap/extension-highlight": "^3.10.1",
+    "@tiptap/extension-text-align": "^3.10.1",
+    "@tiptap/extension-text-style": "^3.10.1",
+    "@tiptap/react": "^3.10.1",
+    "@tiptap/starter-kit": "^3.10.1",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.7.0",
     "jsonwebtoken": "^9.0.2",
+    "lowlight": "^3.3.0",
     "mongoose": "^8.19.1",
     "next": "15.5.4",
     "next-auth": "^4.24.11",
+    "quill": "^2.0.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "zod": "^4.1.12"

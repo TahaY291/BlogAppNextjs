@@ -20,9 +20,9 @@ export default function AuthLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex items-center justify-center min-h-screen bg-gray-50`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex items-center  justify-center min-h-screen bg-red-50`}
       >
-        <main className="w-full  bg-white  rounded-2xl shadow-lg">
+        <main className="rounded-2xl bg-white min-h-screen">
           {children}
         </main>
       </body>

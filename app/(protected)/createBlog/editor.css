@@ -1,0 +1,8 @@
+.ProseMirror {
+  min-height: 300px;
+  padding: 1rem;
+  outline: none;
+}
+.ProseMirror p { margin: 0.5rem 0; }
+.ProseMirror h1 { font-size: 2rem; font-weight: bold; margin: 1rem 0; }
+.ProseMirror h2 { font-size: 1.5rem; font-weight: bold; margin: 0.75rem 0; }

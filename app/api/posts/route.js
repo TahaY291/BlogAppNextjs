@@ -11,82 +11,69 @@ import mongoose from "mongoose";
 
 export async function POST(request) {
     try {
-        await connectCloudinary();
+        await connectCloudinary()
         const formData = await request.formData();
         const image = formData.get("image");
 
+        const title = formData.get("title");
+        const content = formData.get("content");
+        const tagsValue = formData.get("tags");
+       
+        // ⭐ FIX 1: Process comma-separated tags into a clean array
+        const tagsArray = tagsValue 
+            ? tagsValue.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+            : [];
+        
+        const postData = { title, content, tags: tagsArray, coverImg: "" }; // coverImg is temporary
 
-        if (!image) {
-            return NextResponse.json({ error: "Image file is required" }, { status: 400 });
-        }
-
-
-        const arrayBuffer = await image.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const uploadRes = await new Promise((resolve, reject) => {
-            cloudinary.uploader.upload_stream((error, result) => {
-                if (error) reject(error);
-                else resolve(result);
-            }).end(buffer);
-        });
-
-        const postData = {
-            title: formData.get("title"),
-            content: formData.get("content"),
-            tags: formData.get("tags"),
-            coverImage: uploadRes.secure_url,
-        };
-
+        // Validate before uploading image
         const validated = postSchema.safeParse(postData);
         if (!validated.success) {
-            return NextResponse.json(
-                {
-                    error: "Validation failed",
-                    details: validated.error.flatten()
-                },
-                { status: 400 }
-            );
+            // Return the detailed Zod error structure
+            return NextResponse.json({ error: validated.error.flatten() }, { status: 400 });
         }
 
+        // --- Authentication Check ---
         const session = await getServerSession(authOptions);
         const userId = session?.user?.id;
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        // --- Image Upload (only after validation passes) ---
+        let coverImg = "";
+        if (image) {
+            const arrayBuffer = await image.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const uploadRes = await new Promise((resolve, reject) => {
+                cloudinary.uploader.upload_stream((error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }).end(buffer);
+            });
+            coverImg = uploadRes.secure_url;
         }
 
+        // --- Database Insertion ---
         await connectToDatabase();
-
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
+        // Assuming your User model is correctly exported and connected
         const user = await User.findById(userId);
 
         const newPost = await Post.create({
-            title: validated.data.title,
+            title: validated.data.title, // Use validated data
             content: validated.data.content,
             tags: validated.data.tags,
             author: user._id,
-            coverImage: uploadRes.secure_url,
+            coverImg,
         });
 
-        return NextResponse.json(
-            {
-                message: "Post created successfully",
-                post: newPost,
-            },
-            { status: 201 }
-        );
+        return NextResponse.json({ message: "Post created successfully", post: newPost }, { status: 201 });
     } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-            { error: "Something went wrong", details: error.message },
-            { status: 500 }
-        );
+        console.error("API Error:", error);
+        // Ensure error details are properly handled for non-validation errors
+        return NextResponse.json({ error: "Something went wrong", details: error.message }, { status: 500 });
     }
 }
 
-export async function GET(request) {        
+export async function GET(request) {
     try {
         await connectToDatabase()
         const session = await getServerSession(authOptions)
@@ -102,7 +89,7 @@ export async function GET(request) {
         const limit = parseInt(searchParams.get("limit")) || 5;
         const skip = (page - 1) * limit;
 
-        const posts = await Post.aggregate([ 
+        const posts = await Post.aggregate([
             {
                 $match: {
                     isPublished: true
