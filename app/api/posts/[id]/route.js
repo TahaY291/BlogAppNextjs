@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/auth";
 import Post from "@/models/post";
 import connectCloudinary from "@/lib/cloudinary";
 import { connectToDatabase } from "@/lib/db";
-import { authOptions } from "@/lib/auth";
 import { updatePostSchema } from "@/lib/validations/postValidation";
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
@@ -45,108 +44,133 @@ export async function DELETE(request, { params }) {
     }
 }
 
+
 export async function GET(request, { params }) {
-    try {
-        await connectToDatabase();
+  try {
+    await connectToDatabase();
+    const { id } = params;
+    const session = await getServerSession(authOptions);
 
-        const { id } = params;
-        const session = await getServerSession(authOptions);
-
-        if (!session || !session.user) {
-            return NextResponse.json(
-                { message: "User is not logged in" },
-                { status: 401 }
-            );
-        }
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return NextResponse.json(
-                { message: "Invalid blog ID" },
-                { status: 400 }
-            );
-        }
-
-        const blogId = new mongoose.Types.ObjectId(id);
-        const userId = new mongoose.Types.ObjectId(session.user.id);
-
-        const blogDetail = await Post.aggregate([
-            {
-                $match: { _id: blogId },
-            },
-            {
-                $lookup: {
-                    from: "users",
-                    localField: "author",
-                    foreignField: "_id",
-                    as: "userDetails"
-                }
-            },
-            {
-                $unwind: "$userDetails"
-            },
-            {
-                $lookup: {
-                    from: "likes",
-                    localField: "_id",
-                    foreignField: "postId",
-                    as: "likes",
-                },
-            },
-            {
-                $lookup: {
-                    from: "comments",
-                    localField: "_id",
-                    foreignField: "postId",
-                    as: "comments"
-                }
-            },
-            {
-                $addFields: {
-                    likesCount: { $size: "$likes" },
-                    commentsCount: { $size: "$comments" },
-                    isLiked: {
-                        $in: [
-                            userId,
-                            {
-                                $map: {
-                                    input: "$likes",
-                                    as: "like",
-                                    in: "$$like.userId",
-                                },
-                            },
-                        ],
-                    },
-                },
-            },
-            {
-                $project: {
-                    title: 1,
-                    content: 1,
-                    coverImg: 1,
-                    tags: 1,
-                    views: 1,
-                    isPublished: 1,
-                    createdAt: 1,
-                    updatedAt: 1,
-                    likesCount: 1,
-                    commentsCount: 1,
-                    isLiked: 1,
-                    "userDetails._id": 1,
-                    "userDetails.username": 1,
-                    "userDetails.profilePic": 1
-                }
-            }
-
-        ]);
-
-        return NextResponse.json(blogDetail[0] || { message: "Blog not found" });
-    } catch (error) {
-        console.error("Error fetching blog:", error);
-        return NextResponse.json(
-            { message: "Something went wrong", error: error.message },
-            { status: 500 }
-        );
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ message: "Invalid blog ID" }, { status: 400 });
     }
+
+    const blogId = new mongoose.Types.ObjectId(id);
+    const userId = session?.user?.id
+      ? new mongoose.Types.ObjectId(session.user.id)
+      : null;
+
+    const blogDetail = await Post.aggregate([
+      { $match: { _id: blogId } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$userDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "likes",
+          localField: "_id",
+          foreignField: "postId",
+          as: "likes",
+        },
+      },
+      {
+        $lookup: {
+          from: "comments",
+          localField: "_id",
+          foreignField: "postId",
+          as: "comments",
+          pipeline: [
+            {
+              $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "user",
+              },
+            },
+            { $unwind: "$user" },
+            {
+              $project: {
+                text: 1,
+                createdAt: 1,
+                "user._id": 1,
+                "user.username": 1,
+                "user.profilePic": 1,
+              },
+            },
+            { $sort: { createdAt: -1 } },
+          ],
+        },
+      },
+      {
+        $addFields: {
+          likesCount: { $size: "$likes" },
+          commentsCount: { $size: "$comments" },
+          isLiked: userId
+            ? {
+                $in: [
+                  userId,
+                  {
+                    $map: {
+                      input: "$likes",
+                      as: "like",
+                      in: "$$like.userId",
+                    },
+                  },
+                ],
+              }
+            : false,
+        },
+      },
+      {
+        $project: {
+          title: 1,
+          content: 1,
+          coverImg: 1,
+          tags: 1,
+          views: 1,
+          isPublished: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          likesCount: 1,
+          commentsCount: 1,
+          isLiked: 1,
+          comments: 1,
+          author: {
+            _id: "$userDetails._id",
+            username: "$userDetails.username",
+            image: "$userDetails.profilePic",
+          },
+        },
+      },
+    ]);
+
+    if (!blogDetail || blogDetail.length === 0) {
+      return NextResponse.json({ message: "Blog not found" }, { status: 404 });
+    }
+
+    // Increment view count
+    await Post.findByIdAndUpdate(blogId, { $inc: { views: 1 } });
+
+    return NextResponse.json(blogDetail[0], { status: 200 });
+  } catch (error) {
+    console.error("Error fetching blog:", error);
+    return NextResponse.json(
+      { message: "Something went wrong", error: error.message },
+      { status: 500 }
+    );
+  }
 }
 
 export async function PUT(request, { params }) {

@@ -112,7 +112,7 @@ export async function GET(request, { params }) {
     try {
         await connectToDatabase();
 
-        const { id } = params; // this is postId
+        const { id } = params; 
         if (!id) {
             return NextResponse.json({ message: "Post ID is required" }, { status: 400 });
         }
@@ -125,7 +125,6 @@ export async function GET(request, { params }) {
             );
         }
 
-        // Fetch all comments of this post and populate the user info
         const comments = await Comment.find({ postId: id })
             .populate("userId", "username profilePic")
             .sort({ createdAt: -1 }); // latest first

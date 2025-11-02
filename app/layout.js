@@ -1,4 +1,6 @@
+// app/layout.js
 import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -10,12 +12,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export default async function ProtectedLayout({ children }) {
+export const metadata = {
+  title: "My App",
+  description: "Modern Auth with Next.js",
+};
 
-
+export default function RootLayout({ children }) {
   return (
-    <div className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col w-full`}>
-      <main className="flex-grow">{children}</main>
-    </div>
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+        suppressHydrationWarning
+      >
+        {children}
+      </body>
+    </html>
   );
 }
