@@ -6,6 +6,7 @@ import Post from "@/models/post";
 import User from "@/models/user";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import mongoose from 'mongoose'
 
 export async function DELETE(request, { params }) {
     try {
@@ -63,7 +64,7 @@ export async function GET(request, { params }) {
     try {
         await connectToDatabase();
 
-        const { id } = params;
+        const { id } =await params;
         const session = await getServerSession(authOptions);
 
         if (!session || !session.user) {

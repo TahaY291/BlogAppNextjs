@@ -1,12 +1,16 @@
 // app/(protected)/[id]/page.js
 import BlogDetail from "@/components/BlogDtails"
+import { headers } from "next/headers";
 
 async function getBlogData(id) {
   try {
+    const headersInstance = await headers(); 
+    const cookieHeader = headersInstance.get("cookie") || "";
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/posts/${id}`, {
       cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
+        Cookie: cookieHeader,
       }
     })
     
@@ -24,7 +28,7 @@ async function getBlogData(id) {
 
 export default async function BlogPage({ params }) {
   try {
-    const { id } = params
+    const { id } =await params
     const blog = await getBlogData(id)
 
     if (!blog || blog.message === "Blog not found") {

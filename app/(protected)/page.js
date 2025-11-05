@@ -13,11 +13,14 @@ export default async function HomePage() {
   if (!session) {
     redirect("/login");
   }
+const headersInstance = await headers(); 
+  
 
+  const cookieHeader = headersInstance.get("cookie") || "";
   const res = await fetch(`${process.env.NEXTAUTH_URL}/api/posts`, {
     cache: "no-store",
     headers: {
-      Cookie: headers().get("cookie") || "",
+      Cookie: cookieHeader
     },
   });
   if (!res.ok) {

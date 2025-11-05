@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import mongoose from "mongoose"
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -7,7 +8,7 @@ import { connectToDatabase } from "@/lib/db";
 import { updatePostSchema } from "@/lib/validations/postValidation";
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
-
+import { headers } from "next/headers";
 export async function DELETE(request, { params }) {
     try {
         await connectToDatabase();
@@ -17,7 +18,7 @@ export async function DELETE(request, { params }) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { id } = params;
+        const { id } =await params;
         const post = await Post.findById(id);
 
         if (!post) {
@@ -44,12 +45,18 @@ export async function DELETE(request, { params }) {
     }
 }
 
-
 export async function GET(request, { params }) {
   try {
+    headers()
     await connectToDatabase();
-    const { id } = params;
+    const { id } =await params;
     const session = await getServerSession(authOptions);
+      if (!session || !session.user) {
+                return NextResponse.json(
+                    { message: "User not logged in" },
+                    { status: 401 }
+                );
+            }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ message: "Invalid blog ID" }, { status: 400 });
@@ -59,6 +66,7 @@ export async function GET(request, { params }) {
     const userId = session?.user?.id
       ? new mongoose.Types.ObjectId(session.user.id)
       : null;
+      console.log(session.user)
 
     const blogDetail = await Post.aggregate([
       { $match: { _id: blogId } },
@@ -183,7 +191,7 @@ export async function PUT(request, { params }) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { id } = params;
+        const { id } =await params;
         if (!id) {
             return NextResponse.json({ message: "Post ID is required" }, { status: 400 });
         }

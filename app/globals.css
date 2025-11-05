@@ -34,3 +34,6 @@ body {
   font-weight: 500;
   font-style: normal;
 }
+button{
+  cursor: pointer;
+}
