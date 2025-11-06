@@ -6,7 +6,7 @@ async function getBlogData(id) {
   try {
     const headersInstance = await headers(); 
     const cookieHeader = headersInstance.get("cookie") || "";
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/posts/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}'/api/posts/${id}`, {
       cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
