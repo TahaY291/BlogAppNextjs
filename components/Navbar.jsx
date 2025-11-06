@@ -88,7 +88,7 @@ const Navbar = () => {
                             <li className="text-gray-700 hover:text-black transition-colors duration-200 cursor-pointer text-sm py-2">
                                 Contact
                             </li>
-                            <li>
+                            <li className='flex gap-4 items-center justify-center'>
                                 <button className="w-full bg-green-800 hover:bg-green-900 text-white px-6 py-2 rounded text-sm font-medium transition-colors duration-200">
                                     Signout
                                 </button>
