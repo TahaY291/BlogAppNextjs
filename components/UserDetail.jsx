@@ -3,7 +3,6 @@ import Image from "next/image";
 import React  from "react";
 import Link from "next/link";
 import BlogCard from "./BlogCard";
-import { useState } from "react";
 import { useSession } from "next-auth/react";
 import pencile from '@/public/pencile.svg'
 import profileImg from "@/public/profileImg.jpg"
