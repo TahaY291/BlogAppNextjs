@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 
 const fetchCommentsData = async (id, setComments) => {
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const apiUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     try {
         const res = await fetch(`${apiUrl}/api/comments/${id}`, {
             cache: "no-store",
