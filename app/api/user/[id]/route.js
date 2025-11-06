@@ -7,6 +7,7 @@ import User from "@/models/user";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import mongoose from 'mongoose'
+import { v2 as cloudinary } from "cloudinary";
 
 export async function DELETE(request, { params }) {
     try {
@@ -64,7 +65,7 @@ export async function GET(request, { params }) {
     try {
         await connectToDatabase();
 
-        const { id } =await params;
+        const { id } = await params;
         const session = await getServerSession(authOptions);
 
         if (!session || !session.user) {
@@ -187,8 +188,7 @@ export async function PUT(request, { params }) {
     try {
         await connectCloudinary();
         await connectToDatabase();
-
-        const { id } = params;
+        const { id } = await params;
         if (!id) {
             return NextResponse.json(
                 { message: "User ID is required" },
@@ -197,38 +197,28 @@ export async function PUT(request, { params }) {
         }
 
         const formData = await request.formData();
+
         const userData = {
-            username: formData.get("username"),
-            password: formData.get("password"),
-            bio: formData.get("bio"),
+            username: formData.get("username") || undefined,
+            password: formData.get("password") || undefined,
+            bio: formData.get("bio") || undefined,
         };
 
         const validated = updateUserSchema.safeParse(userData);
-        if (!validated.success) {
-            return NextResponse.json(
-                {
-                    error: "Validation failed",
-                    details: validated.error.flatten(),
-                },
-                { status: 400 }
-            );
-        }
 
         const image = formData.get("image");
         let uploadRes = null;
 
-        if (image) {
+        if (image && image.name) {
             const arrayBuffer = await image.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
-            uploadRes = await new Promise((resolve, reject) => {
-                cloudinary.uploader
-                    .upload_stream((error, result) => {
-                        if (error) reject(error);
-                        else resolve(result);
-                    })
-                    .end(buffer);
+            const base64Image = `data:${image.type};base64,${buffer.toString('base64')}`;
+
+            uploadRes = await cloudinary.uploader.upload(base64Image, {
+                folder: "user_profiles",
             });
         }
+
 
         const user = await User.findById(id);
         if (!user) {

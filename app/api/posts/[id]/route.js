@@ -66,7 +66,6 @@ export async function GET(request, { params }) {
     const userId = session?.user?.id
       ? new mongoose.Types.ObjectId(session.user.id)
       : null;
-      console.log(session.user)
 
     const blogDetail = await Post.aggregate([
       { $match: { _id: blogId } },

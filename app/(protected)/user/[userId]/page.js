@@ -16,7 +16,6 @@ async function getUserData(id) {
     
     if (!res.ok) {
       const error = await res.json()
-      console.log(error)
       throw new Error(error.message || 'Failed to fetch userData')
     }
     
@@ -29,9 +28,8 @@ async function getUserData(id) {
 
 
 const page = async ({ params }) => {
-  const { userId } =await params; // ✅ correct key name
+  const { userId } =await params; 
   const userData = await getUserData(userId);
-  console.log(userData);
   return (
     <div>
       user profile

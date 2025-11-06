@@ -211,11 +211,11 @@ const WriteBlog = () => {
                             </p>
                         </div>
 
-                        <div className=''>
-                            <label htmlFor="content" className="block text-lg max-h-[30vh] font-semibold text-gray-800 mb-3">Write Blog Content</label>
+                        <div className='relative'>
+                            <label htmlFor="content" className="block text-lg  font-semibold text-gray-800 mb-3">Write Blog Content</label>
                             <div
                                 ref={editorRef}
-                                className="max-h-[30vh] bg-white border border-gray-300 rounded-md"
+                                className="max-h-[60vh] overflow-y-auto bg-white border border-gray-300 rounded-md"
                             >
                                 {/* Quill editor initializes here */}
                             </div>

@@ -6,7 +6,6 @@ import liked from "@/public/liked.svg";
 import comment from "@/public/comment.svg";
 
 const BlogCard = ({ blog }) => {
-    console.log(blog.tags)
     return (
         <>
             <article className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer group">

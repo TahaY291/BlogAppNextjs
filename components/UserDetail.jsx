@@ -6,23 +6,12 @@ import BlogCard from "./BlogCard";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import pencile from '@/public/pencile.svg'
-import profileImage from "@/public/profileimage.avif"
+import profileImg from "@/public/profileImg.jpg"
 
 export const UserDetail = ({ user, posts }) => {
     const { data: session, status } = useSession();
 
-      const [isEditing, setIsEditing] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [formData, setFormData] = useState({
-        username: user.username,
-        bio: user.bio || "",
-        image: null
-    });
-
-     const isOwner = session?.user?.id === user._id || session?.user?.email === user.email;
-
-     console.log(session.user)
+    const isOwner = session?.user?.id === user._id || session?.user?.email === user.email;
 
     const avgLikes = () => {
         if (!posts || posts.length === 0) return 0;
@@ -61,7 +50,7 @@ export const UserDetail = ({ user, posts }) => {
                         {/* Profile Image */}
                         <div className="relative">
                             <Image
-                                src={user.image || profileImage}
+                                src={user.image || profileImg}
                                 alt={`${user.username}'s profile`}
                                 width={200}
                                 height={200}

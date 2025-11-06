@@ -20,7 +20,7 @@ const EditProfilePage = () => {
     useEffect(() => {
         const fetchUserData = async () => {
             if (!session?.user?.id) return
-            
+
             try {
                 const res = await fetch(`/api/user/${session.user.id}`)
                 const data = await res.json()
@@ -37,6 +37,7 @@ const EditProfilePage = () => {
         fetchUserData()
     }, [session])
 
+
     const handleSubmit = async (e) => {
         e.preventDefault()
         setLoading(true)
@@ -46,7 +47,7 @@ const EditProfilePage = () => {
             const fd = new FormData()
             fd.append('bio', formData.bio)
             if (formData.image) {
-                fd.append('image', formData.image)
+                fd.append("image", formData.image);
             }
 
             const res = await fetch(`/api/user/${session.user.id}`, {
@@ -60,7 +61,7 @@ const EditProfilePage = () => {
             }
 
             const data = await res.json()
-            
+
             // Redirect to profile page
             router.push(`/user/${session.user.id}`)
         } catch (error) {
@@ -222,7 +223,7 @@ const EditProfilePage = () => {
                 <div className="mt-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                     <h3 className="text-xl font-serif text-black mb-4">Profile Guidelines</h3>
                     <p className="text-gray-600 text-sm leading-relaxed">
-                        Your profile represents you in the DevSphere community. Please ensure your bio and profile picture 
+                        Your profile represents you in the DevSphere community. Please ensure your bio and profile picture
                         are appropriate and professional. Inappropriate content will result in profile removal.
                     </p>
                 </div>
