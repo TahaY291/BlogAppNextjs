@@ -41,7 +41,7 @@ const Contact = () => {
                         Get in <span className="text-green-600">Touch</span>
                     </h1>
                     <p className="text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto">
-                        Have a question, suggestion, or just want to say hello? We'd love to hear from you.
+                        Have a question, suggestion, or just want to say hello? We&apos;d love to hear from you.
                     </p>
                 </div>
             </section>
