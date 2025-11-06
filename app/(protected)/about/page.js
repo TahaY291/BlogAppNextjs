@@ -59,7 +59,7 @@ const AboutUs = () => {
                     <article className=" p-5 rounded-lg ">
                         <h2 className="text-3xl md:text-4xl font-serif text-black mb-6">Where are we heading</h2>
                         <p className="text-gray-700 text-lg leading-relaxed mb-4">
-                            Over the years, DevSphere has grown from a niche blog to a widely recognised source of thoughtful content. Our team has expanded, bringing in experts and storytellers from various fields, all committed to our mission. We've covered stories from the rise of AI and its ethical implications to the personal narratives of unsung community heroes.
+                            Over the years, DevSphere has grown from a niche blog to a widely recognised source of thoughtful content. Our team has expanded, bringing in experts and storytellers from various fields, all committed to our mission. We&apos;sve covered stories from the rise of AI and its ethical implications to the personal narratives of unsung community heroes .
                         </p>
                         <p className="text-gray-700 text-lg leading-relaxed">
                             Each article, interview, and feature we publish is crafted with the intention of sparking curiosity, fostering understanding, and encouraging dialogue among our readers.
@@ -73,7 +73,7 @@ const AboutUs = () => {
                             At DevSphere, we are dedicated to maintaining the highest standards of quality in our content. Each piece undergoes rigorous research and editorial processes to ensure accuracy and depth. We believe in the importance of diverse perspectives and strive to feature voices from different backgrounds and experiences.
                         </p>
                         <p className="text-gray-700 text-lg leading-relaxed">
-                            Our commitment to quality is not just about producing well-written articles; it's about creating a trustworthy and engaging space where readers can explore complex topics and find inspiration.
+                            Our commitment to quality is not just about producing well-written articles; it&apos;ss about creating a trustworthy and engaging space where readers can explore complex topics and find inspiration.
                         </p>
                     </article>
 

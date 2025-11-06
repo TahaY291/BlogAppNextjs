@@ -269,7 +269,7 @@ const WriteBlog = () => {
                     <h3 className="text-xl font-serif text-black mb-4">Community Guidelines</h3>
                     <p className="text-gray-600 text-sm leading-relaxed">
                         All content must be original and follow our community standards. Plagiarism, offensive content,
-                        or spam will result in content removal and potential account suspension. Let's keep DevSphere
+                        or spam will result in content removal and potential account suspension. Let&apos;ss keep DevSphere
                         a respectful and valuable resource for everyone.
                     </p>
                 </div>
