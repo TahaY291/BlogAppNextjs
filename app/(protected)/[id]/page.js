@@ -27,6 +27,8 @@ async function getBlogData(id) {
 }
 
 export default async function BlogPage({ params }) {
+   const headersInstance = await headers(); 
+    const host = headersInstance.get("cookie") || "";
   try {
     const { id } =await params
     const blog = await getBlogData(id)
@@ -42,7 +44,7 @@ export default async function BlogPage({ params }) {
       )
     }
 
-    return <BlogDetail initialBlog={blog} />
+    return <BlogDetail host={host} initialBlog={blog} />
   } catch (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">

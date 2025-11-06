@@ -199,6 +199,7 @@ export const UserDetail = ({ user, posts }) => {
                     </div>
                 )}
             </div>
+
         </div>
     );
 };
