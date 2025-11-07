@@ -72,95 +72,36 @@ export async function POST(request) {
         return NextResponse.json({ error: "Something went wrong", details: error.message }, { status: 500 });
     }
 }
-
 export async function GET(request) {
-    try {
-        await connectToDatabase()
-        const session = await getServerSession(authOptions)
-        if (!session || !session.user) {
-            return NextResponse.json(
-                { message: "User not logged in" },
-                { status: 401 }
-            );
-        }
+  try {
+    await connectToDatabase();
+    const session = await getServerSession(authOptions);
+    if (!session?.user)
+      return NextResponse.json({ message: "User not logged in" }, { status: 401 });
 
-        const { searchParams } = new URL(request.url)
-        const page = parseInt(searchParams.get("page")) || 1;
-        const limit = parseInt(searchParams.get("limit")) || 5;
-        const skip = (page - 1) * limit;
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 5;
+    const skip = (page - 1) * limit;
 
-        const posts = await Post.aggregate([
-            {
-                $match: {
-                    isPublished: true
-                }
-            },
-            {
-                $lookup: {
-                    from: "likes",
-                    localField: "_id",
-                    foreignField: "postId",
-                    as: "likes"
-                }
-            },
-            {
-                $lookup: {
-                    from: "comments",
-                    localField: "_id",
-                    foreignField: "postId",
-                    as: "comments",
-                },
-            },
-            {
-                $addFields: {
-                    likesCount: { $size: "$likes" },
-                    commentsCount: { $size: "$comments" },
-                    isLiked: {
-                        $in: [
-                            new mongoose.Types.ObjectId(session.user.id),
-                            {
-                                $map: {
-                                    input: "$likes",
-                                    as: "like",
-                                    in: "$$like.userId",
-                                },
-                            },
-                        ],
-                    },
-                }
-            },
-            {
-                $project: {
-                    title: 1,
-                    content: 1,
-                    coverImg: 1,
-                    tags: 1,
-                    views: 1,
-                    createdAt: 1,
-                    updatedAt: 1,
-                    likesCount: 1,
-                    commentsCount: 1,
-                    isLiked: 1,
-                },
-            },
-            { $sort: { createdAt: -1 } },
-            { $skip: skip },
-            { $limit: limit },
-        ])
-        const totalPosts = await Post.countDocuments({ isPublished: true });
+    // Simple indexed query
+    const posts = await Post.find({ isPublished: true })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .select("title content coverImg tags views createdAt likesCount commentsCount");
 
-        return NextResponse.json({
-            success: true,
-            currentPage: page,
-            totalPages: Math.ceil(totalPosts / limit),
-            totalPosts,
-            posts,
-        });
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-            { error: "Failed to fetch posts", details: error.message },
-            { status: 500 }
-        );
-    }
+    const totalPosts = await Post.countDocuments({ isPublished: true });
+
+    return NextResponse.json({
+      success: true,
+      currentPage: page,
+      totalPages: Math.ceil(totalPosts / limit),
+      totalPosts,
+      posts,
+    });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Failed to fetch posts", details: error.message }, { status: 500 });
+  }
 }

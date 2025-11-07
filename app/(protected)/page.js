@@ -2,48 +2,50 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import Image from "next/image";
-import main from '@/public/main.jpg'
+import main from "@/public/main.jpg";
 import Link from "next/link";
 import { headers } from "next/headers";
 import BlogCard from "@/components/BlogCard";
 
+export const metadata = {
+  title: "DevSphere — Explore & Share Blogs",
+  description: "Read and write blogs about technology, people, and culture on DevSphere.",
+};
+
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
+  if (!session) redirect("/login");
 
-  if (!session) {
-    redirect("/login");
-  }
-const headersInstance = await headers(); 
-  
-
+  const headersInstance = await headers();
   const cookieHeader = headersInstance.get("cookie") || "";
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/posts`, {
-    cache: "no-store",
-    headers: {
-      Cookie: cookieHeader
-    },
-  });
-  if (!res.ok) {
-    throw new Error("Failed to fetch blogs");
-  }
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-  const { posts } = await res.json();
+  let posts = [];
+  try {
+    const res = await fetch(`${baseUrl}/api/posts`, {
+      cache: "no-store",
+      headers: { Cookie: cookieHeader },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      posts = data.posts || [];
+    }
+  } catch (error) {
+    console.error("Error fetching blogs:", error);
+  }
 
   return (
     <main>
-      <section className="min-h-screen">
+      <section className="min-h-screen relative">
         <div className="relative w-full h-screen">
-          <Image
-            src={main}
-            alt='DevSphere Hero Image'
-            className=" object-cover w-screen h-screen rounded-xl"
-            priority 
-          />
+          <Image src={main} alt="DevSphere Hero Image" className="object-cover w-screen h-screen rounded-xl" priority />
+          <div className="absolute inset-0 bg-black/50"></div>
+
           <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white mb-8 max-w-4xl leading-tight">
               Welcome to DevSphere — we write about technology, people, and culture
             </h1>
-            <Link href="/createBlog">
+            <Link href="/createBlog" aria-label="Create a new blog">
               <button className="cursor-pointer bg-green-800 hover:bg-green-900 text-white px-8 py-3 rounded-md text-base font-medium transition-colors duration-200">
                 Write Blog
               </button>
@@ -54,30 +56,30 @@ const headersInstance = await headers();
 
       <section className="py-10">
         <h2 className="text-2xl font-semibold mb-4 text-center">Latest Blogs</h2>
-       <div className="max-w-6xl mx-auto px-6 py-12">
-  {posts.length > 0 ? (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {posts.map((blog) => (
-        <BlogCard key={blog._id} blog={blog} />
-      ))}
-    </div>
-  ) : (
-    <div className="text-center py-16">
-      <div className="inline-block p-4 bg-gray-100 rounded-full mb-4">
-        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      </div>
-      <h3 className="text-xl font-serif text-black mb-2">No blogs found</h3>
-      <p className="text-gray-500 mb-6">Be the first to share your story with the community.</p>
-      <Link href="/createBlog">
-        <button className="bg-green-800 hover:bg-green-900 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
-          Write a Blog
-        </button>
-      </Link>
-    </div>
-  )}
-</div>
+        <div className="max-w-6xl mx-auto px-6 py-12">
+          {posts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {posts.map((blog) => (
+                <BlogCard key={blog._id} blog={blog} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="inline-block p-4 bg-gray-100 rounded-full mb-4">
+                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-serif text-black mb-2">No blogs found</h3>
+              <p className="text-gray-500 mb-6">Be the first to share your story with the community.</p>
+              <Link href="/createBlog" aria-label="Create your first blog">
+                <button className="bg-green-800 hover:bg-green-900 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
+                  Write a Blog
+                </button>
+              </Link>
+            </div>
+          )}
+        </div>
       </section>
     </main>
   );

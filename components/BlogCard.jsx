@@ -1,9 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import unliked from "@/public/unliked.svg";
-import liked from "@/public/liked.svg";
-import comment from "@/public/comment.svg";
+
 
 const BlogCard = ({ blog }) => {
     return (
@@ -36,38 +34,19 @@ const BlogCard = ({ blog }) => {
                             ))}
                         </div>
                     )}
-
                     <Link href={`/${blog._id}`} key={blog._id}>
                         <h3 className="text-xl font-serif font-semibold text-black mb-2 line-clamp-2 group-hover:text-green-700 transition-colors">
                             {blog.title}
                         </h3>
-
                         {blog.content && (
                             <p className="text-gray-600 text-sm line-clamp-3 mb-4">
                                 {blog.content.replace(/<[^>]*>/g, "").substring(0, 120)}
                                 ...
                             </p>
                         )}
-
                     </Link>
-                    {/* Author & Date */}
-                    <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-100">
-                        <div className="flex items-center gap-2">
-                            <div className="relative">
-                                {!blog.isLiked ? <Image src={unliked} alt="unlike" /> : <Image src={liked} alt="likes" />}
-                                <span className="absolute -right-2 bottom-0">{blog.likesCount > 0 ? `  ${blog.likesCount} 
-                            `: ""}</span>
-                            </div>
-                        </div>
-                        {blog.createdAt && <div className="relative">
-                            <Image src={comment} alt="comment" />
-                            <span className="absolute -right-2 bottom-0">{blog.commentsCount > 0 ? `  ${blog.commentsCount} 
-                            `: ""}</span>
-                        </div>}
-                    </div>
                 </div>
             </article>
-
         </>
     );
 };

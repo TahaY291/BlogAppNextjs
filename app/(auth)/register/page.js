@@ -25,33 +25,54 @@ export default function RegisterPage() {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError("");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-        try {
-            const fd = new FormData();
-            Object.entries(formData).forEach(([key, value]) => {
-                if (value) fd.append(key, value);
-            });
+  // 🧩 Quick client-side validation
+  if (formData.username.trim().length < 3) {
+    setError("Username must be at least 3 characters long.");
+    setLoading(false);
+    return;
+  }
+  if (!formData.email.includes("@")) {
+    setError("Please enter a valid email address.");
+    setLoading(false);
+    return;
+  }
+  if (formData.password.length < 6) {
+    setError("Password must be at least 6 characters long.");
+    setLoading(false);
+    return;
+  }
 
-            const res = await fetch("/api/auth/register", {
-                method: "POST",
-                body: fd,
-            });
+  try {
+    const fd = new FormData();
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value) fd.append(key, value);
+    });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to register");
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      body: fd,
+    });
 
-            alert("Registration successful!");
-            router.push("/login");
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to register");
+
+    alert("Registration successful!");
+
+    setFormData({ username: "", email: "", password: "", bio: "", image: null });
+
+    router.push("/login");
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     return (
         <div className="flex justify-center items-center min-h-screen bg-gray-50 py-12">
